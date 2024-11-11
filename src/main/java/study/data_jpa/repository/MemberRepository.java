@@ -15,7 +15,7 @@ import java.util.List; //추가 count 쿼리 없이 결과만 반환
 import java.util.Optional;
 
 //spring data jpa
-public interface MemberRepository extends JpaRepository<Member, Long> {
+public interface MemberRepository extends JpaRepository<Member, Long>, MemberRepositoryCustom {
 
     //간단하게 만드는 상황일 때 사용
     List<Member> findByUsernameAndAgeGreaterThan(String username, int age);
@@ -70,4 +70,16 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     List<Member> findLockByUsername(String username);
+
+    <T> List<T> findProjectionsByUsername(String username, Class<T> type);
+
+    //네이티브 쿼리
+    @Query(value = "select * from member where username =?", nativeQuery = true)
+    Member findByNativeQuery(String username);
+
+    @Query(value = "select m.member_id as id, m.username, t.name as teamName " +
+            "from member m left join team t",
+            countQuery = "select count(*) from member",
+            nativeQuery = true)
+    Page<MemberProjection> findByNativeProjection(Pageable pageable);
 }
